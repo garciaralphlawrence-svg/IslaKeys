@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IslaKeys | Unlock Property in the Philippines</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="styles/main.css">
 
 </head>
@@ -19,7 +20,7 @@
     <li><a href="#properties">Properties</a></li>
     <li><a href="#about">About</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="login.html?role=client">Login</a></li>
+    <li><a id="navLogin" href="login.html?role=client">Login</a></li>
   </ul>
 </nav>
 
@@ -60,35 +61,35 @@
   <div class="slider reveal">
     <div class="slide-track">
       <article class="property-card">
-        <img src="https://images.unsplash.com/photo-1560185127-6ed189bf02f4" alt="Makati Luxury Condo">
+        <img src="https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&amp;fit=crop&amp;w=800&amp;q=75" alt="Makati Luxury Condo">
         <div class="property-info">
           <h3>Makati Luxury Condo</h3>
           <p>Premium condo in Makati CBD.</p>
         </div>
       </article>
       <article class="property-card">
-        <img src="https://images.unsplash.com/photo-1600585154526-990dced4db0d" alt="BGC Skyline Condo">
+        <img src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&amp;fit=crop&amp;w=800&amp;q=75" alt="BGC Skyline Condo">
         <div class="property-info">
           <h3>BGC Skyline Condo</h3>
           <p>Modern residence overlooking BGC.</p>
         </div>
       </article>
       <article class="property-card">
-        <img src="https://images.unsplash.com/photo-1600585154084-4e5fe7c39198" alt="Tagaytay Villa">
+        <img src="https://images.unsplash.com/photo-1600585154084-4e5fe7c39198?auto=format&amp;fit=crop&amp;w=800&amp;q=75" alt="Tagaytay Villa">
         <div class="property-info">
           <h3>Tagaytay Villa</h3>
           <p>Mountain retreat with lake views.</p>
         </div>
       </article>
       <article class="property-card">
-        <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914" alt="Palawan Beach House">
+        <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&amp;fit=crop&amp;w=800&amp;q=75" alt="Palawan Beach House">
         <div class="property-info">
           <h3>Palawan Beach House</h3>
           <p>Private beachfront residence.</p>
         </div>
       </article>
       <article class="property-card">
-        <img src="https://images.unsplash.com/photo-1600047509782-20d39509f26d" alt="Cebu Ocean Condo">
+        <img src="https://images.unsplash.com/photo-1600047509782-20d39509f26d?auto=format&amp;fit=crop&amp;w=800&amp;q=75" alt="Cebu Ocean Condo">
         <div class="property-info">
           <h3>Cebu Ocean Condo</h3>
           <p>Ocean view condo in Cebu.</p>
@@ -126,11 +127,12 @@
     <h2 class="section-title">Talk To IslaKeys</h2>
     <p class="section-copy">Share what you are looking for and our team will guide you to the right next step.</p>
   </div>
-  <form id="contact-form" class="contact-form">
+  <form id="contact-form" class="contact-form" novalidate>
     <input id="contact-name" type="text" placeholder="Your Name" required>
     <input id="contact-email" type="email" placeholder="Email" required>
     <textarea id="contact-message" rows="4" placeholder="Message" required></textarea>
     <button type="submit" class="btn btn-primary">Send Message</button>
+    <p id="contact-status" class="form-status" role="status"></p>
   </form>
 </section>
 
@@ -149,14 +151,14 @@
     </div>
     <div class="footer-links">
       <div class="footer-title">Legal</div>
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Use</a>
-      <a href="#">Disclaimer</a>
+      <a href="legal.html#privacy">Privacy Policy</a>
+      <a href="legal.html#terms">Terms of Use</a>
+      <a href="legal.html#disclaimer">Disclaimer</a>
     </div>
     <div class="footer-links">
       <div class="footer-title">Contact</div>
-      <p>hello@islakeys.ph</p>
-      <p>+63 (2) 1234 5678</p>
+      <p><a href="mailto:hello@islakeys.ph">hello@islakeys.ph</a></p>
+      <p><a href="tel:+63212345678">+63 (2) 1234 5678</a></p>
     </div>
   </div>
 

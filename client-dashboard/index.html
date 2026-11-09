@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IslaKeys | Client Dashboard</title>
+    <script src="../js/auth.js"></script>
+    <script>window.IslaKeys.requireRole('client');</script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="../styles/portal.css">
 </head>
 <body>
@@ -41,14 +44,26 @@
                 <article class="card">
                     <h3>Saved Properties</h3>
                     <p class="meta">Track your top picks and compare shortlist options before scheduling a call.</p>
+                    <div id="savedList" class="list"></div>
+                    <div class="inline-form">
+                        <select id="saveSelect" class="input" aria-label="Choose a listing to save"></select>
+                        <button id="saveListingBtn" class="btn btn-soft" type="button">Save</button>
+                    </div>
                 </article>
                 <article class="card">
                     <h3>Broker Messages</h3>
                     <p class="meta">Start private discussions with brokers and centralize property details.</p>
+                    <div id="latestReply" class="list"></div>
                 </article>
                 <article class="card">
                     <h3>Application Status</h3>
                     <p class="meta">View current reservation and due diligence milestones in one place.</p>
+                    <ul class="milestones">
+                        <li class="done">Account verified</li>
+                        <li class="done">Buyer profile submitted</li>
+                        <li id="milestoneViewing">Property viewing</li>
+                        <li>Reservation and due diligence</li>
+                    </ul>
                 </article>
             </div>
         </section>
@@ -57,79 +72,196 @@
             <h2>Quick Message</h2>
             <p>Send a quick request and keep a draft note while browsing listings.</p>
             <div class="form-row">
+                <select id="propertySelect" class="input" aria-label="Property this message is about"></select>
                 <textarea id="messageInput" placeholder="Ask about a property, schedule, or legal process..."></textarea>
                 <div class="actions">
                     <button id="saveDraftBtn" class="btn-soft" type="button">Save Draft</button>
                     <button id="sendBtn" type="button">Send Message</button>
                 </div>
             </div>
-            <p id="messageStatus" class="note"></p>
+            <p id="messageStatus" class="note" role="status"></p>
+        </section>
+
+        <section class="panel">
+            <h2>Your Inquiries</h2>
+            <p>Every message you send goes to the broker lead queue. Replies appear here.</p>
+            <div id="inquiryList" class="list"></div>
         </section>
     </div>
 
     <script>
-        const STORAGE_KEYS = {
-            session: 'islakeysSession',
-            draft: 'islakeysClientDraft'
-        };
-
-        const sessionRaw = localStorage.getItem('islakeysSession');
-        let session = null;
-
-        try {
-            session = sessionRaw ? JSON.parse(sessionRaw) : null;
-        } catch (_error) {
-            session = null;
-        }
-
-        if (!session || session.role !== 'client') {
-            window.location.href = '../login.html?role=client';
-        }
-
-        function renderSession() {
-            document.getElementById('sessionInfo').textContent = 'Signed in as ' + session.name + ' (' + session.email + ')';
-            document.getElementById('savedCount').textContent = '5';
-            document.getElementById('inquiryCount').textContent = '2';
-            document.getElementById('replyCount').textContent = '3';
-        }
-
-        function initDraftBox() {
-            const input = document.getElementById('messageInput');
-            const status = document.getElementById('messageStatus');
-            const savedDraft = localStorage.getItem(STORAGE_KEYS.draft);
-            if (savedDraft) {
-                input.value = savedDraft;
-                status.textContent = 'Draft restored.';
-                status.className = 'note ok';
+        (function () {
+            const store = window.IslaKeys;
+            const session = store.requireRole('client');
+            if (!session) {
+                return;
             }
 
-            document.getElementById('saveDraftBtn').addEventListener('click', () => {
-                localStorage.setItem(STORAGE_KEYS.draft, input.value.trim());
-                status.textContent = 'Draft saved locally.';
-                status.className = 'note ok';
-            });
+            const esc = store.escapeHtml;
+            const status = document.getElementById('messageStatus');
 
-            document.getElementById('sendBtn').addEventListener('click', () => {
-                if (!input.value.trim()) {
-                    status.textContent = 'Write a message first.';
-                    status.className = 'note warn';
-                    return;
+            function setStatus(text, type) {
+                status.textContent = text;
+                status.className = 'note ' + type;
+            }
+
+            function myInquiries() {
+                return store.getInquiries()
+                    .filter((i) => String(i.clientEmail).toLowerCase() === session.email.toLowerCase())
+                    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+            }
+
+            function propertyName(id) {
+                const property = store.getProperty(id);
+                return property ? property.name : 'General question';
+            }
+
+            function renderStats() {
+                const inquiries = myInquiries();
+                document.getElementById('savedCount').textContent = store.getSaved(session.email).length;
+                document.getElementById('inquiryCount').textContent = inquiries.filter((i) => i.status !== 'replied').length;
+                document.getElementById('replyCount').textContent = inquiries.filter((i) => i.status === 'replied').length;
+            }
+
+            function renderSaved() {
+                const saved = store.getSaved(session.email);
+                const list = document.getElementById('savedList');
+                list.innerHTML = saved.length
+                    ? saved.map((id) => {
+                        const p = store.getProperty(id);
+                        return '<div class="item row-item"><span><strong>' + esc(p.name) + '</strong><br><span class="meta">' +
+                            esc(p.location) + ' &middot; ' + esc(p.price) + '</span></span>' +
+                            '<button class="btn btn-soft btn-small" type="button" data-remove="' + esc(p.id) + '">Remove</button></div>';
+                    }).join('')
+                    : '<div class="item meta">No saved listings yet.</div>';
+
+                const select = document.getElementById('saveSelect');
+                const options = store.PROPERTIES.filter((p) => saved.indexOf(p.id) === -1);
+                select.innerHTML = options.length
+                    ? options.map((p) => '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>').join('')
+                    : '<option value="">All listings saved</option>';
+                select.disabled = !options.length;
+                document.getElementById('saveListingBtn').disabled = !options.length;
+            }
+
+            function renderInquiries() {
+                const inquiries = myInquiries();
+                const list = document.getElementById('inquiryList');
+                list.innerHTML = inquiries.length
+                    ? inquiries.map((i) => {
+                        const replied = i.status === 'replied';
+                        let html = '<div class="item"><strong>' + esc(propertyName(i.propertyId)) + '</strong> ' +
+                            '<span class="badge ' + (replied ? 'badge-ok' : 'badge-warn') + '">' +
+                            (replied ? 'Replied' : 'Awaiting broker') + '</span><br>' +
+                            '<span class="meta">' + esc(i.message) + '</span><br>' +
+                            '<span class="meta">Sent: ' + esc(store.formatDate(i.createdAt)) + '</span>';
+                        if (replied && i.reply) {
+                            html += '<div class="reply"><strong>' + esc(i.brokerName || 'Your broker') + ':</strong> ' + esc(i.reply) + '</div>';
+                        }
+                        return html + '</div>';
+                    }).join('')
+                    : '<div class="item meta">No inquiries yet. Send your first message above.</div>';
+
+                const replies = inquiries
+                    .filter((i) => i.status === 'replied' && i.reply)
+                    .sort((a, b) => String(b.repliedAt || '').localeCompare(String(a.repliedAt || '')));
+                const latest = document.getElementById('latestReply');
+                latest.innerHTML = replies.length
+                    ? '<div class="item"><span class="meta">Latest reply from ' + esc(replies[0].brokerName || 'your broker') +
+                        ' on ' + esc(propertyName(replies[0].propertyId)) + ':</span><br>' + esc(replies[0].reply) + '</div>'
+                    : '<div class="item meta">No broker replies yet.</div>';
+
+                document.getElementById('milestoneViewing').className = replies.length ? 'done' : 'current';
+            }
+
+            function renderAll() {
+                renderStats();
+                renderSaved();
+                renderInquiries();
+            }
+
+            function initMessageBox() {
+                const input = document.getElementById('messageInput');
+                const propertySelect = document.getElementById('propertySelect');
+                propertySelect.innerHTML = '<option value="">General question</option>' +
+                    store.PROPERTIES.map((p) => '<option value="' + esc(p.id) + '">Regarding: ' + esc(p.name) + '</option>').join('');
+
+                const savedDraft = store.read(store.KEYS.draft, '');
+                if (typeof savedDraft === 'string' && savedDraft) {
+                    input.value = savedDraft;
+                    setStatus('Draft restored.', 'ok');
                 }
 
-                localStorage.removeItem(STORAGE_KEYS.draft);
-                input.value = '';
-                status.textContent = 'Message sent to broker queue.';
-                status.className = 'note ok';
+                document.getElementById('saveDraftBtn').addEventListener('click', () => {
+                    const text = input.value.trim();
+                    if (!text) {
+                        store.remove(store.KEYS.draft);
+                        setStatus('Nothing to save yet. Write a message first.', 'warn');
+                        return;
+                    }
+                    store.write(store.KEYS.draft, text);
+                    setStatus('Draft saved locally.', 'ok');
+                });
+
+                document.getElementById('sendBtn').addEventListener('click', () => {
+                    const text = input.value.trim();
+                    if (!text) {
+                        setStatus('Write a message first.', 'warn');
+                        input.focus();
+                        return;
+                    }
+                    if (text.length < 10) {
+                        setStatus('Please add a little more detail (at least 10 characters).', 'warn');
+                        input.focus();
+                        return;
+                    }
+
+                    const inquiries = store.getInquiries();
+                    inquiries.push({
+                        id: store.uid('inq'),
+                        clientEmail: session.email,
+                        clientName: session.name,
+                        propertyId: propertySelect.value,
+                        message: text,
+                        createdAt: new Date().toISOString(),
+                        status: 'open'
+                    });
+                    store.saveInquiries(inquiries);
+                    store.remove(store.KEYS.draft);
+                    input.value = '';
+                    propertySelect.value = '';
+                    setStatus('Message sent to the broker queue. The reply will appear under Your Inquiries.', 'ok');
+                    renderAll();
+                });
+            }
+
+            document.getElementById('saveListingBtn').addEventListener('click', () => {
+                const id = document.getElementById('saveSelect').value;
+                if (!id) {
+                    return;
+                }
+                const saved = store.getSaved(session.email);
+                saved.push(id);
+                store.setSaved(session.email, saved);
+                renderAll();
             });
-        }
 
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem(STORAGE_KEYS.session);
-            window.location.href = '../login.html?role=client';
-        });
+            document.getElementById('savedList').addEventListener('click', (event) => {
+                const button = event.target.closest('[data-remove]');
+                if (!button) {
+                    return;
+                }
+                const id = button.getAttribute('data-remove');
+                store.setSaved(session.email, store.getSaved(session.email).filter((x) => x !== id));
+                renderAll();
+            });
 
-        renderSession();
-        initDraftBox();
+            document.getElementById('logoutBtn').addEventListener('click', () => store.logout('client'));
+
+            document.getElementById('sessionInfo').textContent = 'Signed in as ' + session.name + ' (' + session.email + ')';
+            initMessageBox();
+            renderAll();
+        })();
     </script>
 </body>
 </html>

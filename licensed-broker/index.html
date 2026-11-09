@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IslaKeys | Broker Portal</title>
+    <script src="../js/auth.js"></script>
+    <script>window.IslaKeys.requireRole('broker');</script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="../styles/portal.css">
 </head>
 <body>
@@ -38,19 +41,37 @@
             </div>
 
             <div class="grid">
-                <article class="tile card">
+                <a class="tile card tile-link" href="#leads">
                     <h3>Lead Queue</h3>
                     <p class="meta">Review buyer inquiries and assign priorities based on budget readiness.</p>
-                </article>
-                <article class="tile card">
+                </a>
+                <a class="tile card tile-link" href="#listings">
                     <h3>Listing Manager</h3>
                     <p class="meta">Publish, update, and archive your property listings with quick status checks.</p>
-                </article>
+                </a>
                 <article class="tile card">
                     <h3>Compliance</h3>
                     <p class="meta">Track PRC records and maintain complete transaction documentation.</p>
+                    <ul class="milestones">
+                        <li class="done">PRC license on file</li>
+                        <li class="done">DHSUD registration</li>
+                        <li class="current">Annual CPD units due</li>
+                    </ul>
                 </article>
             </div>
+        </section>
+
+        <section class="panel" id="leads">
+            <h2>Lead Queue</h2>
+            <p>Buyer inquiries sent from the client portal. Reply to move a lead forward.</p>
+            <p id="leadStatus" class="note" role="status"></p>
+            <div id="leadList" class="list"></div>
+        </section>
+
+        <section class="panel" id="listings">
+            <h2>Listing Manager</h2>
+            <p>Your live listings and how many buyers have asked about each.</p>
+            <div id="listingList" class="list"></div>
         </section>
 
         <section class="panel">
@@ -63,93 +84,162 @@
                     <button id="saveNoteBtn" class="btn-soft" type="button">Save Note</button>
                 </div>
             </div>
-            <p id="noteStatus" class="note"></p>
+            <p id="noteStatus" class="note" role="status"></p>
             <div id="noteList" class="list"></div>
         </section>
     </div>
 
     <script>
-        const STORAGE_KEYS = {
-            session: 'islakeysSession',
-            notes: 'islakeysBrokerNotes'
-        };
-
-        const sessionRaw = localStorage.getItem('islakeysSession');
-        let session = null;
-
-        try {
-            session = sessionRaw ? JSON.parse(sessionRaw) : null;
-        } catch (_error) {
-            session = null;
-        }
-
-        if (!session || session.role !== 'broker') {
-            window.location.href = '../login.html?role=broker';
-        }
-
-        function getNotes() {
-            try {
-                return JSON.parse(localStorage.getItem(STORAGE_KEYS.notes) || '[]');
-            } catch (_error) {
-                return [];
+        (function () {
+            const store = window.IslaKeys;
+            const session = store.requireRole('broker');
+            if (!session) {
+                return;
             }
-        }
 
-        function saveNotes(notes) {
-            localStorage.setItem(STORAGE_KEYS.notes, JSON.stringify(notes));
-        }
+            const esc = store.escapeHtml;
 
-        function renderStats() {
+            function propertyName(id) {
+                const property = store.getProperty(id);
+                return property ? property.name : 'General question';
+            }
+
+            function getNotes() {
+                const notes = store.read(store.KEYS.notes, []);
+                return Array.isArray(notes) ? notes.filter((n) => n && n.title) : [];
+            }
+
+            function renderStats() {
+                const inquiries = store.getInquiries();
+                const clients = new Set(inquiries.map((i) => String(i.clientEmail).toLowerCase()));
+                document.getElementById('leadCount').textContent = inquiries.filter((i) => i.status !== 'replied').length;
+                document.getElementById('activeClientCount').textContent = clients.size;
+                document.getElementById('listingCount').textContent = store.PROPERTIES.length;
+            }
+
+            function renderLeads() {
+                const inquiries = store.getInquiries().sort((a, b) => {
+                    const aOpen = a.status !== 'replied' ? 0 : 1;
+                    const bOpen = b.status !== 'replied' ? 0 : 1;
+                    return aOpen - bOpen || String(b.createdAt).localeCompare(String(a.createdAt));
+                });
+                const list = document.getElementById('leadList');
+                if (!inquiries.length) {
+                    list.innerHTML = '<div class="item meta">No leads yet.</div>';
+                    return;
+                }
+                list.innerHTML = inquiries.map((i) => {
+                    const replied = i.status === 'replied';
+                    let html = '<div class="item"><strong>' + esc(i.clientName || i.clientEmail) + '</strong> ' +
+                        '<span class="badge ' + (replied ? 'badge-ok' : 'badge-warn') + '">' + (replied ? 'Replied' : 'New lead') + '</span><br>' +
+                        '<span class="meta">' + esc(i.clientEmail) + ' &middot; ' + esc(propertyName(i.propertyId)) + '</span><br>' +
+                        '<span class="meta">' + esc(i.message) + '</span><br>' +
+                        '<span class="meta">Received: ' + esc(store.formatDate(i.createdAt)) + '</span>';
+                    if (replied) {
+                        html += '<div class="reply"><strong>' + esc(i.brokerName || 'Broker') + ':</strong> ' + esc(i.reply || '') + '</div>';
+                    } else {
+                        html += '<div class="form-row">' +
+                            '<textarea class="reply-input" data-reply-input="' + esc(i.id) + '" placeholder="Write a reply to ' + esc(i.clientName || 'this buyer') + '..."></textarea>' +
+                            '<div class="actions"><button type="button" data-reply="' + esc(i.id) + '">Send Reply</button></div></div>';
+                    }
+                    return html + '</div>';
+                }).join('');
+            }
+
+            function renderListings() {
+                const inquiries = store.getInquiries();
+                document.getElementById('listingList').innerHTML = store.PROPERTIES.map((p) => {
+                    const count = inquiries.filter((i) => i.propertyId === p.id).length;
+                    return '<div class="item row-item"><span><strong>' + esc(p.name) + '</strong><br><span class="meta">' +
+                        esc(p.location) + ' &middot; ' + esc(p.price) + '</span></span>' +
+                        '<span class="badge badge-ok">' + count + (count === 1 ? ' inquiry' : ' inquiries') + '</span></div>';
+                }).join('');
+            }
+
+            function renderNotes() {
+                const container = document.getElementById('noteList');
+                const notes = getNotes();
+                if (!notes.length) {
+                    container.innerHTML = '<div class="item meta">No notes yet.</div>';
+                    return;
+                }
+
+                container.innerHTML = notes
+                    .slice()
+                    .reverse()
+                    .map((note) => '<div class="item"><strong>' + esc(note.title) + '</strong><br><span class="meta">' + esc(note.body) +
+                        '</span><br><span class="meta">Saved: ' + esc(store.formatDate(note.createdAt)) + '</span></div>')
+                    .join('');
+            }
+
+            function renderAll() {
+                renderStats();
+                renderLeads();
+                renderListings();
+                renderNotes();
+            }
+
+            document.getElementById('leadList').addEventListener('click', (event) => {
+                const button = event.target.closest('[data-reply]');
+                if (!button) {
+                    return;
+                }
+                const id = button.getAttribute('data-reply');
+                const input = document.querySelector('[data-reply-input="' + CSS.escape(id) + '"]');
+                const text = input ? input.value.trim() : '';
+                const status = document.getElementById('leadStatus');
+                if (!text) {
+                    status.textContent = 'Write a reply before sending.';
+                    status.className = 'note warn';
+                    if (input) {
+                        input.focus();
+                    }
+                    return;
+                }
+
+                const inquiries = store.getInquiries();
+                const lead = inquiries.find((i) => i.id === id);
+                if (!lead) {
+                    return;
+                }
+                lead.status = 'replied';
+                lead.reply = text;
+                lead.brokerName = session.name;
+                lead.repliedAt = new Date().toISOString();
+                store.saveInquiries(inquiries);
+
+                status.textContent = 'Reply sent to ' + (lead.clientName || lead.clientEmail) + '.';
+                status.className = 'note ok';
+                renderAll();
+            });
+
+            document.getElementById('saveNoteBtn').addEventListener('click', () => {
+                const title = document.getElementById('noteTitle').value.trim();
+                const body = document.getElementById('noteBody').value.trim();
+                const status = document.getElementById('noteStatus');
+
+                if (!title || !body) {
+                    status.textContent = 'Please add both title and details.';
+                    status.className = 'note warn';
+                    return;
+                }
+
+                const notes = getNotes();
+                notes.push({ title, body, createdAt: new Date().toISOString() });
+                store.write(store.KEYS.notes, notes);
+
+                document.getElementById('noteTitle').value = '';
+                document.getElementById('noteBody').value = '';
+                status.textContent = 'Note saved.';
+                status.className = 'note ok';
+                renderNotes();
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', () => store.logout('broker'));
+
             document.getElementById('sessionInfo').textContent = 'Signed in as ' + session.name + ' (' + session.email + ')';
-            document.getElementById('leadCount').textContent = '6';
-            document.getElementById('activeClientCount').textContent = '4';
-            document.getElementById('listingCount').textContent = '9';
-        }
-
-        function renderNotes() {
-            const container = document.getElementById('noteList');
-            const notes = getNotes();
-            if (!notes.length) {
-                container.innerHTML = '<div class="item">No notes yet.</div>';
-                return;
-            }
-
-            container.innerHTML = notes
-                .slice()
-                .reverse()
-                .map((note) => '<div class="item"><strong>' + note.title + '</strong><br><span class="meta">' + note.body + '</span><br><span class="meta">Saved: ' + new Date(note.createdAt).toLocaleString() + '</span></div>')
-                .join('');
-        }
-
-        document.getElementById('saveNoteBtn').addEventListener('click', () => {
-            const title = document.getElementById('noteTitle').value.trim();
-            const body = document.getElementById('noteBody').value.trim();
-            const status = document.getElementById('noteStatus');
-
-            if (!title || !body) {
-                status.textContent = 'Please add both title and details.';
-                status.className = 'note warn';
-                return;
-            }
-
-            const notes = getNotes();
-            notes.push({ title, body, createdAt: new Date().toISOString() });
-            saveNotes(notes);
-
-            document.getElementById('noteTitle').value = '';
-            document.getElementById('noteBody').value = '';
-            status.textContent = 'Note saved.';
-            status.className = 'note ok';
-            renderNotes();
-        });
-
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem(STORAGE_KEYS.session);
-            window.location.href = '../login.html?role=broker';
-        });
-
-        renderStats();
-        renderNotes();
+            renderAll();
+        })();
     </script>
 </body>
 </html>

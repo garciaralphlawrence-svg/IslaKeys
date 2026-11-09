@@ -84,7 +84,7 @@ body {
   text-align: center;
   background:
     linear-gradient(120deg, rgba(29, 7, 15, 0.86), rgba(42, 11, 20, 0.46)),
-    url("https://images.unsplash.com/photo-1600585154340-be6161a56a0c");
+    url("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=75");
   background-size: cover;
   background-position: center;
 }
@@ -324,6 +324,56 @@ body {
   color: #cfa6b0;
 }
 
+.form-status {
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 1px;
+}
+
+.form-status.success {
+  color: #61d79f;
+}
+
+.form-status.error {
+  color: #ffd277;
+}
+
+.legal-doc {
+  max-width: 820px;
+  padding-top: 150px;
+}
+
+.legal-doc article {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  padding: 26px;
+  margin-bottom: 16px;
+  scroll-margin-top: 110px;
+}
+
+.legal-doc h2 {
+  font-family: 'Playfair Display', serif;
+  color: #ffd6e0;
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.legal-doc p,
+.legal-doc li {
+  color: var(--muted);
+  line-height: 1.75;
+  font-size: 15px;
+}
+
+.legal-doc ul {
+  margin: 8px 0 0 20px;
+}
+
+.legal-doc p + p {
+  margin-top: 10px;
+}
+
 footer {
   background: var(--bg-deep);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -446,5 +496,15 @@ footer p {
   .role-grid,
   .footer-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .legal-doc {
+    padding-top: 36px;
+  }
+
+  .legal-doc article {
+    padding: 20px;
   }
 }

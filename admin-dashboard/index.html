@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IslaKeys | Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/portal.css">
+</head>
+<body>
+    <div class="wrap">
+        <div class="topbar">
+            <div class="brand">IslaKeys Admin</div>
+            <div class="actions">
+                <a href="../index.html">Home</a>
+                <button id="logoutBtn" type="button">Logout</button>
+            </div>
+        </div>
+
+        <section class="panel">
+            <p class="kicker">Admin Control Center</p>
+            <h1>Admin Dashboard</h1>
+            <p id="sessionInfo">Checking admin session...</p>
+
+            <div class="stats">
+                <article class="stat">
+                    <h3>Total Accounts</h3>
+                    <strong id="totalUsers">0</strong>
+                </article>
+                <article class="stat">
+                    <h3>Clients</h3>
+                    <strong id="clientCount">0</strong>
+                </article>
+                <article class="stat">
+                    <h3>Brokers</h3>
+                    <strong id="brokerCount">0</strong>
+                </article>
+                <article class="stat">
+                    <h3>Admins</h3>
+                    <strong id="adminCount">0</strong>
+                </article>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Recent Accounts</h2>
+            <p>Snapshot of users from local storage auth records.</p>
+            <div id="userList" class="list"></div>
+        </section>
+
+        <section class="panel">
+            <h2>Quick Admin Actions</h2>
+            <p>Use this to restore test users in case data is manually edited.</p>
+            <div class="actions" style="margin-top: 10px;">
+                <button id="resetUsersBtn" class="btn-soft" type="button">Reset Test Users</button>
+            </div>
+            <p id="actionStatus" class="note"></p>
+        </section>
+    </div>
+
+    <script>
+        const STORAGE_KEYS = {
+            users: 'islakeysUsers',
+            session: 'islakeysSession'
+        };
+
+        function getDefaultUsers() {
+            return [
+                { role: 'admin', name: 'IslaKeys Admin', email: 'admin@islakeys.ph', password: 'admin12345' },
+                { role: 'client', name: 'Client Test', email: 'client.test@islakeys.ph', password: 'client123' },
+                { role: 'broker', name: 'Broker Test', email: 'broker.test@islakeys.ph', password: 'broker123' }
+            ];
+        }
+
+        function getUsers() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEYS.users) || '[]');
+            } catch (_error) {
+                return [];
+            }
+        }
+
+        function getSession() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEYS.session) || 'null');
+            } catch (_error) {
+                return null;
+            }
+        }
+
+        function requireAdminSession() {
+            const session = getSession();
+            if (!session || session.role !== 'admin') {
+                window.location.href = '../login.html';
+                return null;
+            }
+
+            return session;
+        }
+
+        function renderStats(users) {
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('clientCount').textContent = users.filter((u) => u.role === 'client').length;
+            document.getElementById('brokerCount').textContent = users.filter((u) => u.role === 'broker').length;
+            document.getElementById('adminCount').textContent = users.filter((u) => u.role === 'admin').length;
+        }
+
+        function renderUsers(users) {
+            const container = document.getElementById('userList');
+            if (!users.length) {
+                container.innerHTML = '<div class="item">No users found.</div>';
+                return;
+            }
+
+            container.innerHTML = users
+                .slice()
+                .reverse()
+                .map((user) => {
+                    const created = user.createdAt ? new Date(user.createdAt).toLocaleString() : 'Seed account';
+                    return '<div class="item"><strong>' + user.name + '</strong><br><span>' + user.email + '</span><br><span>Role: ' + user.role + '</span><br><span>Created: ' + created + '</span></div>';
+                })
+                .join('');
+        }
+
+        function initDashboard() {
+            const session = requireAdminSession();
+            if (!session) {
+                return;
+            }
+
+            document.getElementById('sessionInfo').textContent = 'Signed in as ' + session.name + ' (' + session.email + ')';
+
+            const users = getUsers();
+            renderStats(users);
+            renderUsers(users);
+        }
+
+        document.getElementById('resetUsersBtn').addEventListener('click', () => {
+            localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(getDefaultUsers()));
+            const users = getUsers();
+            renderStats(users);
+            renderUsers(users);
+
+            const status = document.getElementById('actionStatus');
+            status.textContent = 'Test users restored successfully.';
+            status.className = 'note ok';
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem(STORAGE_KEYS.session);
+            window.location.href = '../login.html';
+        });
+
+        initDashboard();
+    </script>
+</body>
+</html>

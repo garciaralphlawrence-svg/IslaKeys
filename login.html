@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Sign Up | IslaKeys</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #2a0b14;
+            font-family: 'Poppins', sans-serif;
+            color: #f7e6ea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: rgba(58, 13, 24, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 107, 138, 0.2);
+            border-radius: 15px;
+            padding: 60px 50px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .auth-header .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            letter-spacing: 2px;
+            color: #ffd6e0;
+            margin-bottom: 10px;
+        }
+
+        .auth-header p {
+            color: #f1cdd4;
+            font-size: 14px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(255, 107, 138, 0.2);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px;
+            background: transparent;
+            border: none;
+            color: #f1cdd4;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .tab-btn.active {
+            color: #ff6b8a;
+            border-bottom-color: #ff6b8a;
+        }
+
+        .tab-btn:hover {
+            color: #ffd6e0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #ffd6e0;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 107, 138, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #f7e6ea;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #ff6b8a;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 15px rgba(255, 107, 138, 0.2);
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 107, 138, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #f7e6ea;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #ff6b8a;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 15px rgba(255, 107, 138, 0.2);
+        }
+
+        select option {
+            background: #2a0b14;
+            color: #f7e6ea;
+        }
+
+        input[type="radio"] {
+            cursor: pointer;
+            accent-color: #ff6b8a;
+        }
+
+        .signup-step {
+            display: none;
+        }
+
+        .signup-step.active {
+            display: block;
+        }
+
+        input::placeholder {
+            color: rgba(247, 230, 234, 0.5);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #ff6b8a;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .checkbox-group a {
+            color: #ff6b8a;
+            text-decoration: none;
+        }
+
+        .checkbox-group a:hover {
+            text-decoration: underline;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: #7b001c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Poppins', sans-serif;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background: #a4162b;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 138, 0.2);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 107, 138, 0.2);
+        }
+
+        .divider-text {
+            color: #f1cdd4;
+            font-size: 12px;
+        }
+
+        .social-login {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 107, 138, 0.2);
+            border-radius: 8px;
+            color: #f7e6ea;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .social-btn:hover {
+            background: rgba(255, 107, 138, 0.1);
+            border-color: #ff6b8a;
+        }
+
+        .help-text {
+            text-align: center;
+            color: #f1cdd4;
+            font-size: 13px;
+            margin-top: 20px;
+        }
+
+        .help-text a {
+            color: #ff6b8a;
+            text-decoration: none;
+        }
+
+        .help-text a:hover {
+            text-decoration: underline;
+        }
+
+        .status-msg {
+            margin-top: 14px;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .status-msg.error {
+            display: block;
+            background: rgba(255, 80, 80, 0.14);
+            border: 1px solid rgba(255, 80, 80, 0.3);
+            color: #ffd4d4;
+        }
+
+        .status-msg.success {
+            display: block;
+            background: rgba(80, 210, 140, 0.14);
+            border: 1px solid rgba(80, 210, 140, 0.3);
+            color: #d8ffe8;
+        }
+
+        .test-accounts {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 107, 138, 0.24);
+            background: rgba(0, 0, 0, 0.18);
+            font-size: 12px;
+            line-height: 1.6;
+            color: #f1cdd4;
+        }
+
+        .test-accounts strong {
+            color: #ffd6e0;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #ff6b8a;
+            text-decoration: none;
+            font-size: 13px;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            gap: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .auth-container {
+                padding: 40px 30px;
+            }
+
+            .auth-header .logo {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <a href="index.html" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to Home
+    </a>
+
+    <div class="auth-header">
+        <div class="logo">🔑 IslaKeys</div>
+        <p>Welcome back to your property search</p>
+    </div>
+
+    <div class="tab-buttons">
+        <button class="tab-btn active" data-tab="login" onclick="switchTab('login', this)">Login</button>
+        <button class="tab-btn" data-tab="signup" onclick="switchTab('signup', this)">Sign Up</button>
+    </div>
+
+    <!-- LOGIN TAB -->
+    <div id="login" class="tab-content active">
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>Account Type</label>
+                <select id="loginRole" required>
+                    <option value="client">Client</option>
+                    <option value="broker">Broker</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="loginEmail" placeholder="your@email.com" required>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password" required>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="remember">
+                <label for="remember">Remember me</label>
+            </div>
+
+            <button type="submit" class="submit-btn">Login</button>
+
+            <div class="help-text">
+                <a href="#">Forgot your password?</a>
+            </div>
+
+            <div id="authMessage" class="status-msg"></div>
+        </form>
+
+        <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-text">OR</div>
+            <div class="divider-line"></div>
+        </div>
+
+        <div class="social-login">
+            <button class="social-btn" onclick="socialLogin('google')">
+                <i class="fab fa-google"></i> Google
+            </button>
+            <button class="social-btn" onclick="socialLogin('facebook')">
+                <i class="fab fa-facebook"></i> Facebook
+            </button>
+        </div>
+
+        <div class="help-text">
+            Don't have an account? <a href="javascript:switchTab('signup')">Sign up here</a>
+        </div>
+
+        <div class="test-accounts">
+            <strong>Test Accounts</strong><br>
+            Admin (auto-detected): admin@islakeys.ph / admin12345<br>
+            Client: client.test@islakeys.ph / client123<br>
+            Broker: broker.test@islakeys.ph / broker123
+        </div>
+    </div>
+
+    <!-- SIGNUP TAB -->
+    <div id="signup" class="tab-content">
+        <!-- STEP 1: BASIC ACCOUNT -->
+        <div id="signup-step1" class="signup-step active">
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                    <div style="width: 30px; height: 30px; border-radius: 50%; background: #ff6b8a; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">1</div>
+                    <span style="color: #ffd6e0; font-weight: 600;">Create Your Account</span>
+                </div>
+            </div>
+
+            <form onsubmit="proceedToVerification(event)">
+                <div class="form-group">
+                    <label>Account Type <span style="color: #ff6b8a;">*</span></label>
+                    <select id="signupRole" required>
+                        <option value="client">Client</option>
+                        <option value="broker">Broker</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Full Name <span style="color: #ff6b8a;">*</span></label>
+                    <input type="text" id="fullName" placeholder="John Doe" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Email Address <span style="color: #ff6b8a;">*</span></label>
+                    <input type="email" id="signupEmail" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Mobile Number <span style="color: #ff6b8a;">*</span></label>
+                    <input type="tel" id="mobileNumber" placeholder="+63 9XX XXX XXXX" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Password <span style="color: #ff6b8a;">*</span></label>
+                    <input type="password" id="signupPassword" placeholder="Create a strong password" required>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">
+                        I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn">Continue</button>
+            </form>
+
+            <div class="divider">
+                <div class="divider-line"></div>
+                <div class="divider-text">OR</div>
+                <div class="divider-line"></div>
+            </div>
+
+            <div class="social-login">
+                <button class="social-btn" onclick="socialSignup('google')">
+                    <i class="fab fa-google"></i> Google
+                </button>
+                <button class="social-btn" onclick="socialSignup('facebook')">
+                    <i class="fab fa-facebook"></i> Facebook
+                </button>
+            </div>
+
+            <div class="help-text">
+                Already have an account? <a href="javascript:switchTab('login')">Login here</a>
+            </div>
+        </div>
+
+        <!-- STEP 2: VERIFICATION -->
+        <div id="signup-step2" class="signup-step">
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                    <div style="width: 30px; height: 30px; border-radius: 50%; background: #ff6b8a; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">2</div>
+                    <span style="color: #ffd6e0; font-weight: 600;">Verify Your Account</span>
+                </div>
+                <p style="color: #f1cdd4; font-size: 13px;">Choose your preferred verification method</p>
+            </div>
+
+            <form onsubmit="proceedToPreferences(event)">
+                <div class="verification-options" style="margin-bottom: 25px;">
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 15px; background: rgba(255, 107, 138, 0.1); border: 2px solid rgba(255, 107, 138, 0.3); border-radius: 8px; cursor: pointer; margin-bottom: 12px;">
+                        <input type="radio" name="verifyMethod" value="email" checked>
+                        <span>
+                            <strong style="color: #ffd6e0;">Email Verification</strong><br>
+                            <span style="font-size: 12px; color: #f1cdd4;">We'll send a link to your email</span>
+                        </span>
+                    </label>
+
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 15px; background: rgba(255, 107, 138, 0.1); border: 2px solid rgba(255, 107, 138, 0.3); border-radius: 8px; cursor: pointer;">
+                        <input type="radio" name="verifyMethod" value="sms">
+                        <span>
+                            <strong style="color: #ffd6e0;">SMS / OTP Code</strong><br>
+                            <span style="font-size: 12px; color: #f1cdd4;">We'll send a code to your phone</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div id="verifyCode" style="display: none;">
+                    <div class="form-group">
+                        <label>Verification Code</label>
+                        <input type="text" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}">
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">Verify & Continue</button>
+                <button type="button" class="submit-btn" style="background: rgba(255, 107, 138, 0.2); color: #ff6b8a; margin-top: 10px;" onclick="resendCode()">Resend Code</button>
+            </form>
+
+            <div class="help-text" style="margin-top: 20px;">
+                <a href="javascript:backToSignupStep1()">Back</a>
+            </div>
+        </div>
+
+        <!-- STEP 3: PREFERENCES (OPTIONAL) -->
+        <div id="signup-step3" class="signup-step">
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                    <div style="width: 30px; height: 30px; border-radius: 50%; background: #ff6b8a; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">3</div>
+                    <span style="color: #ffd6e0; font-weight: 600;">Set Your Preferences</span>
+                </div>
+                <p style="color: #f1cdd4; font-size: 13px;"><i class="fas fa-info-circle"></i> This helps us suggest better properties (optional)</p>
+            </div>
+
+            <form onsubmit="completeSignup(event)">
+                <div class="form-group">
+                    <label>Preferred Property Type</label>
+                    <select>
+                        <option value="">Select property type...</option>
+                        <option value="condo">Condo / Apartment</option>
+                        <option value="house">House</option>
+                        <option value="lot">Lot</option>
+                        <option value="commercial">Commercial</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Budget Range</label>
+                    <select>
+                        <option value="">Select budget range...</option>
+                        <option value="1-2m">₱1M - ₱2M</option>
+                        <option value="2-4m">₱2M - ₱4M</option>
+                        <option value="4-6m">₱4M - ₱6M</option>
+                        <option value="6-10m">₱6M - ₱10M</option>
+                        <option value="10m+">₱10M+</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Preferred Location</label>
+                    <input type="text" placeholder="e.g., Metro Manila, Cebu, Davao...">
+                </div>
+
+                <div class="form-group">
+                    <label>Purpose</label>
+                    <select>
+                        <option value="">Select purpose...</option>
+                        <option value="buy">Buy</option>
+                        <option value="rent">Rent</option>
+                        <option value="invest">Investment</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="submit-btn">Complete Registration</button>
+                <button type="button" class="submit-btn" style="background: rgba(255, 107, 138, 0.2); color: #ff6b8a; margin-top: 10px;" onclick="skipPreferences()">Skip for Now</button>
+            </form>
+
+            <div class="help-text" style="margin-top: 20px;">
+                <a href="javascript:backToVerification()">Back</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEYS = {
+        users: 'islakeysUsers',
+        session: 'islakeysSession'
+    };
+
+    const REDIRECTS = {
+        client: 'client-dashboard/index.html#chat',
+        broker: 'licensed-broker/index.html',
+        admin: 'admin-dashboard/index.html'
+    };
+
+    function getDefaultUsers() {
+        return [
+            {
+                role: 'admin',
+                name: 'IslaKeys Admin',
+                email: 'admin@islakeys.ph',
+                password: 'admin12345'
+            },
+            {
+                role: 'client',
+                name: 'Client Test',
+                email: 'client.test@islakeys.ph',
+                password: 'client123'
+            },
+            {
+                role: 'broker',
+                name: 'Broker Test',
+                email: 'broker.test@islakeys.ph',
+                password: 'broker123'
+            }
+        ];
+    }
+
+    function initAuthStorage() {
+        if (!localStorage.getItem(STORAGE_KEYS.users)) {
+            localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(getDefaultUsers()));
+        }
+    }
+
+    function getUsers() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEYS.users) || '[]');
+        } catch (_error) {
+            localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(getDefaultUsers()));
+            return getDefaultUsers();
+        }
+    }
+
+    function saveUsers(users) {
+        localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+    }
+
+    function showAuthMessage(message, type) {
+        const box = document.getElementById('authMessage');
+        if (!box) {
+            return;
+        }
+
+        box.className = `status-msg ${type}`;
+        box.textContent = message;
+    }
+
+    function clearAuthMessage() {
+        const box = document.getElementById('authMessage');
+        if (!box) {
+            return;
+        }
+
+        box.className = 'status-msg';
+        box.textContent = '';
+    }
+
+    function initLoginRoleFromQuery() {
+        const params = new URLSearchParams(window.location.search);
+        const requestedRole = params.get('role');
+        const loginRole = document.getElementById('loginRole');
+
+        if (!loginRole || !requestedRole) {
+            return;
+        }
+
+        if (requestedRole === 'client' || requestedRole === 'broker') {
+            loginRole.value = requestedRole;
+            loginRole.disabled = true;
+        }
+    }
+
+    function redirectIfAlreadyLoggedIn() {
+        try {
+            const session = JSON.parse(localStorage.getItem(STORAGE_KEYS.session) || 'null');
+            if (!session || !session.role) {
+                return;
+            }
+
+            redirectByRole(session.role);
+        } catch (_error) {
+            // Ignore malformed session payload and allow normal login flow.
+        }
+    }
+
+    function redirectByRole(role) {
+        const nextPage = REDIRECTS[role] || REDIRECTS.client;
+        window.location.href = nextPage;
+    }
+
+    function switchTab(tab, triggerEl) {
+        // Hide all tabs
+        document.getElementById('login').classList.remove('active');
+        document.getElementById('signup').classList.remove('active');
+        
+        // Remove active class from all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        // Show selected tab
+        document.getElementById(tab).classList.add('active');
+        
+        // Add active class to clicked button
+        if (triggerEl) {
+            triggerEl.classList.add('active');
+        } else {
+            const tabButton = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+            if (tabButton) {
+                tabButton.classList.add('active');
+            }
+        }
+
+        clearAuthMessage();
+    }
+
+    function handleLogin(event) {
+        event.preventDefault();
+
+        const selectedRole = document.getElementById('loginRole').value;
+        const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+        const password = document.getElementById('loginPassword').value;
+        const users = getUsers();
+
+        if (!email || !password) {
+            showAuthMessage('Please enter your email and password.', 'error');
+            return;
+        }
+
+        const user = users.find((item) => item.email.toLowerCase() === email);
+
+        if (!user || user.password !== password) {
+            showAuthMessage('Invalid email or password.', 'error');
+            return;
+        }
+
+        // Admin access is intentionally hidden from the account-type selector.
+        if (user.role !== 'admin' && user.role !== selectedRole) {
+            showAuthMessage('This account does not match the selected account type.', 'error');
+            return;
+        }
+
+        localStorage.setItem(STORAGE_KEYS.session, JSON.stringify({
+            role: user.role,
+            name: user.name,
+            email: user.email,
+            loggedInAt: new Date().toISOString()
+        }));
+
+        showAuthMessage('Login successful. Redirecting...', 'success');
+        setTimeout(() => redirectByRole(user.role), 500);
+    }
+
+    function socialLogin(provider) {
+        showAuthMessage('Social login (' + provider + ') is not configured yet.', 'error');
+    }
+
+    // SIGNUP FLOW FUNCTIONS
+    function proceedToVerification(event) {
+        event.preventDefault();
+        
+        // Validate basic info
+        const fullName = document.getElementById('fullName').value;
+        const email = document.getElementById('signupEmail').value;
+        const mobile = document.getElementById('mobileNumber').value;
+        const password = document.getElementById('signupPassword').value;
+        
+        if (!fullName || !email || !mobile || !password) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        if (password.length < 6) {
+            alert('Password must be at least 6 characters');
+            return;
+        }
+
+        // Hide Step 1, show Step 2
+        document.getElementById('signup-step1').classList.remove('active');
+        document.getElementById('signup-step2').classList.add('active');
+    }
+
+    function proceedToPreferences(event) {
+        event.preventDefault();
+        
+        const verifyMethod = document.querySelector('input[name="verifyMethod"]:checked').value;
+        console.log('Verification method:', verifyMethod);
+        
+        // Simulate verification
+        alert('Verification code sent! Proceeding to preferences...');
+        
+        // Hide Step 2, show Step 3
+        document.getElementById('signup-step2').classList.remove('active');
+        document.getElementById('signup-step3').classList.add('active');
+    }
+
+    function completeSignup(event) {
+        event.preventDefault();
+        
+        const account = createAccountFromSignup();
+        if (!account) {
+            return;
+        }
+
+        alert('Welcome, ' + account.name + '! Your account has been created.\n\nRedirecting to your dashboard...');
+        redirectByRole(account.role);
+    }
+
+    function skipPreferences(event) {
+        if (event) event.preventDefault();
+
+        const account = createAccountFromSignup();
+        if (!account) {
+            return;
+        }
+
+        alert('Welcome, ' + account.name + '! Your account has been created.\n\nRedirecting to your dashboard...');
+        redirectByRole(account.role);
+    }
+
+    function backToSignupStep1() {
+        document.getElementById('signup-step2').classList.remove('active');
+        document.getElementById('signup-step1').classList.add('active');
+    }
+
+    function backToVerification() {
+        document.getElementById('signup-step3').classList.remove('active');
+        document.getElementById('signup-step2').classList.add('active');
+    }
+
+    function resendCode() {
+        alert('Verification code resent!');
+    }
+
+    function socialSignup(provider) {
+        alert('Social signup (' + provider + ') is not configured yet.');
+    }
+
+    function createAccountFromSignup() {
+        const role = document.getElementById('signupRole').value;
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+        const password = document.getElementById('signupPassword').value;
+
+        if (!fullName || !email || !password) {
+            alert('Please complete all required fields.');
+            return null;
+        }
+
+        const users = getUsers();
+        const exists = users.some((item) => item.email.toLowerCase() === email);
+        if (exists) {
+            alert('This email is already registered. Please log in instead.');
+            switchTab('login');
+            return null;
+        }
+
+        const newUser = {
+            role,
+            name: fullName,
+            email,
+            password,
+            mobile: document.getElementById('mobileNumber').value.trim(),
+            createdAt: new Date().toISOString()
+        };
+
+        users.push(newUser);
+        saveUsers(users);
+
+        localStorage.setItem(STORAGE_KEYS.session, JSON.stringify({
+            role: newUser.role,
+            name: newUser.name,
+            email: newUser.email,
+            loggedInAt: new Date().toISOString()
+        }));
+
+        return newUser;
+    }
+
+    // Handle verification method toggle
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'verifyMethod') {
+            const verifyCodeDiv = document.getElementById('verifyCode');
+            if (e.target.value === 'sms') {
+                verifyCodeDiv.style.display = 'block';
+            } else {
+                verifyCodeDiv.style.display = 'none';
+            }
+        }
+    });
+
+    initAuthStorage();
+    redirectIfAlreadyLoggedIn();
+    initLoginRoleFromQuery();
+</script>
+
+</body>
+</html>

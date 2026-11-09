@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IslaKeys | Client Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/portal.css">
+</head>
+<body>
+    <div class="wrap">
+        <div class="topbar">
+            <div class="brand">IslaKeys Client</div>
+            <div class="actions">
+                <a href="../index.html">Home</a>
+                <button id="logoutBtn" type="button">Logout</button>
+            </div>
+        </div>
+
+        <section class="panel">
+            <p class="kicker">Client Portal</p>
+            <h1>Client Dashboard</h1>
+            <p id="sessionInfo">Checking session...</p>
+
+            <div class="stats">
+                <article class="stat">
+                    <h3>Saved Listings</h3>
+                    <strong id="savedCount">0</strong>
+                </article>
+                <article class="stat">
+                    <h3>Open Inquiries</h3>
+                    <strong id="inquiryCount">0</strong>
+                </article>
+                <article class="stat">
+                    <h3>Broker Replies</h3>
+                    <strong id="replyCount">0</strong>
+                </article>
+            </div>
+
+            <div class="grid">
+                <article class="card">
+                    <h3>Saved Properties</h3>
+                    <p class="meta">Track your top picks and compare shortlist options before scheduling a call.</p>
+                </article>
+                <article class="card">
+                    <h3>Broker Messages</h3>
+                    <p class="meta">Start private discussions with brokers and centralize property details.</p>
+                </article>
+                <article class="card">
+                    <h3>Application Status</h3>
+                    <p class="meta">View current reservation and due diligence milestones in one place.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="panel" id="chat">
+            <h2>Quick Message</h2>
+            <p>Send a quick request and keep a draft note while browsing listings.</p>
+            <div class="form-row">
+                <textarea id="messageInput" placeholder="Ask about a property, schedule, or legal process..."></textarea>
+                <div class="actions">
+                    <button id="saveDraftBtn" class="btn-soft" type="button">Save Draft</button>
+                    <button id="sendBtn" type="button">Send Message</button>
+                </div>
+            </div>
+            <p id="messageStatus" class="note"></p>
+        </section>
+    </div>
+
+    <script>
+        const STORAGE_KEYS = {
+            session: 'islakeysSession',
+            draft: 'islakeysClientDraft'
+        };
+
+        const sessionRaw = localStorage.getItem('islakeysSession');
+        let session = null;
+
+        try {
+            session = sessionRaw ? JSON.parse(sessionRaw) : null;
+        } catch (_error) {
+            session = null;
+        }
+
+        if (!session || session.role !== 'client') {
+            window.location.href = '../login.html?role=client';
+        }
+
+        function renderSession() {
+            document.getElementById('sessionInfo').textContent = 'Signed in as ' + session.name + ' (' + session.email + ')';
+            document.getElementById('savedCount').textContent = '5';
+            document.getElementById('inquiryCount').textContent = '2';
+            document.getElementById('replyCount').textContent = '3';
+        }
+
+        function initDraftBox() {
+            const input = document.getElementById('messageInput');
+            const status = document.getElementById('messageStatus');
+            const savedDraft = localStorage.getItem(STORAGE_KEYS.draft);
+            if (savedDraft) {
+                input.value = savedDraft;
+                status.textContent = 'Draft restored.';
+                status.className = 'note ok';
+            }
+
+            document.getElementById('saveDraftBtn').addEventListener('click', () => {
+                localStorage.setItem(STORAGE_KEYS.draft, input.value.trim());
+                status.textContent = 'Draft saved locally.';
+                status.className = 'note ok';
+            });
+
+            document.getElementById('sendBtn').addEventListener('click', () => {
+                if (!input.value.trim()) {
+                    status.textContent = 'Write a message first.';
+                    status.className = 'note warn';
+                    return;
+                }
+
+                localStorage.removeItem(STORAGE_KEYS.draft);
+                input.value = '';
+                status.textContent = 'Message sent to broker queue.';
+                status.className = 'note ok';
+            });
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem(STORAGE_KEYS.session);
+            window.location.href = '../login.html?role=client';
+        });
+
+        renderSession();
+        initDraftBox();
+    </script>
+</body>
+</html>

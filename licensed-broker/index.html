@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IslaKeys | Broker Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/portal.css">
+</head>
+<body>
+    <div class="wrap">
+        <div class="topbar">
+            <div class="brand">IslaKeys Broker</div>
+            <div class="actions">
+                <a href="../index.html">Home</a>
+                <button id="logoutBtn" type="button">Logout</button>
+            </div>
+        </div>
+
+        <section class="panel">
+            <p class="kicker">Broker Portal</p>
+            <h1>Licensed Broker Portal</h1>
+            <p id="sessionInfo">Checking session...</p>
+
+            <div class="stats">
+                <article class="stat">
+                    <h3>New Leads</h3>
+                    <strong id="leadCount">0</strong>
+                </article>
+                <article class="stat">
+                    <h3>Active Clients</h3>
+                    <strong id="activeClientCount">0</strong>
+                </article>
+                <article class="stat">
+                    <h3>Listings Live</h3>
+                    <strong id="listingCount">0</strong>
+                </article>
+            </div>
+
+            <div class="grid">
+                <article class="tile card">
+                    <h3>Lead Queue</h3>
+                    <p class="meta">Review buyer inquiries and assign priorities based on budget readiness.</p>
+                </article>
+                <article class="tile card">
+                    <h3>Listing Manager</h3>
+                    <p class="meta">Publish, update, and archive your property listings with quick status checks.</p>
+                </article>
+                <article class="tile card">
+                    <h3>Compliance</h3>
+                    <p class="meta">Track PRC records and maintain complete transaction documentation.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Create Follow-Up Note</h2>
+            <p>Capture client commitments and next actions before your next call.</p>
+            <div class="form-row">
+                <input id="noteTitle" class="input" type="text" placeholder="Client name or listing reference">
+                <textarea id="noteBody" placeholder="Write your follow-up note..."></textarea>
+                <div class="actions">
+                    <button id="saveNoteBtn" class="btn-soft" type="button">Save Note</button>
+                </div>
+            </div>
+            <p id="noteStatus" class="note"></p>
+            <div id="noteList" class="list"></div>
+        </section>
+    </div>
+
+    <script>
+        const STORAGE_KEYS = {
+            session: 'islakeysSession',
+            notes: 'islakeysBrokerNotes'
+        };
+
+        const sessionRaw = localStorage.getItem('islakeysSession');
+        let session = null;
+
+        try {
+            session = sessionRaw ? JSON.parse(sessionRaw) : null;
+        } catch (_error) {
+            session = null;
+        }
+
+        if (!session || session.role !== 'broker') {
+            window.location.href = '../login.html?role=broker';
+        }
+
+        function getNotes() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEYS.notes) || '[]');
+            } catch (_error) {
+                return [];
+            }
+        }
+
+        function saveNotes(notes) {
+            localStorage.setItem(STORAGE_KEYS.notes, JSON.stringify(notes));
+        }
+
+        function renderStats() {
+            document.getElementById('sessionInfo').textContent = 'Signed in as ' + session.name + ' (' + session.email + ')';
+            document.getElementById('leadCount').textContent = '6';
+            document.getElementById('activeClientCount').textContent = '4';
+            document.getElementById('listingCount').textContent = '9';
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('noteList');
+            const notes = getNotes();
+            if (!notes.length) {
+                container.innerHTML = '<div class="item">No notes yet.</div>';
+                return;
+            }
+
+            container.innerHTML = notes
+                .slice()
+                .reverse()
+                .map((note) => '<div class="item"><strong>' + note.title + '</strong><br><span class="meta">' + note.body + '</span><br><span class="meta">Saved: ' + new Date(note.createdAt).toLocaleString() + '</span></div>')
+                .join('');
+        }
+
+        document.getElementById('saveNoteBtn').addEventListener('click', () => {
+            const title = document.getElementById('noteTitle').value.trim();
+            const body = document.getElementById('noteBody').value.trim();
+            const status = document.getElementById('noteStatus');
+
+            if (!title || !body) {
+                status.textContent = 'Please add both title and details.';
+                status.className = 'note warn';
+                return;
+            }
+
+            const notes = getNotes();
+            notes.push({ title, body, createdAt: new Date().toISOString() });
+            saveNotes(notes);
+
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteBody').value = '';
+            status.textContent = 'Note saved.';
+            status.className = 'note ok';
+            renderNotes();
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem(STORAGE_KEYS.session);
+            window.location.href = '../login.html?role=broker';
+        });
+
+        renderStats();
+        renderNotes();
+    </script>
+</body>
+</html>
